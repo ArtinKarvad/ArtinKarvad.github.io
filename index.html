@@ -1,0 +1,811 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>NeoBank - بانک دیجیتال</title>
+  <style>
+    :root {
+      --bg: #0f172a;
+      --card: #1e293b;
+      --text: #f1f5f9;
+      --accent: #22c55e;
+      --accent-hover: #16a34a;
+      --border: #334155;
+    }
+    .light {
+      --bg: #f8fafc;
+      --card: #ffffff;
+      --text: #0f172a;
+      --accent: #2563eb;
+      --accent-hover: #1d4ed8;
+      --border: #e2e8f0;
+    }
+    body {
+      margin: 0;
+      font-family: 'Tahoma', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      transition: all 0.4s;
+      min-height: 100vh;
+      position: relative;
+    }
+    .container {
+      max-width: 440px;
+      margin: 40px auto;
+      background: var(--card);
+      padding: 24px;
+      border-radius: 16px;
+      box-shadow: 0 20px 40px rgba(0,0,0,0.3);
+    }
+    h2, h3, h4 { margin: 0 0 16px 0; text-align: center; }
+    h2 { font-size: 1.8rem; }
+    .input-group { margin: 10px 0; }
+    input, select, button {
+      width: 100%;
+      padding: 12px 16px;
+      border-radius: 12px;
+      border: none;
+      font-size: 1rem;
+      box-sizing: border-box;
+    }
+    input, select {
+      background: #334155;
+      color: var(--text);
+      border: 1px solid var(--border);
+    }
+    .light input, .light select { background: #f1f5f9; color: #000; }
+    button {
+      background: var(--accent);
+      color: white;
+      font-weight: bold;
+      cursor: pointer;
+      margin-top: 8px;
+      transition: background 0.2s;
+    }
+    button:hover { background: var(--accent-hover); }
+    button.secondary { background: var(--secondary, #64748b); }
+    button.danger { background: var(--danger, #ef4444); }
+    .card {
+      background: rgba(255,255,255,0.05);
+      padding: 16px;
+      border-radius: 12px;
+      margin: 12px 0;
+      border: 1px solid var(--border);
+    }
+    .light .card { background: rgba(0,0,0,0.05); }
+    .top {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+    .hidden { display: none; }
+    .transaction {
+      font-size: 0.9rem;
+      padding: 8px 0;
+      border-bottom: 1px solid var(--border);
+      opacity: 0.8;
+    }
+    .transaction:last-child { border: none; }
+    .hint {
+      font-size: 0.85rem;
+      opacity: 0.7;
+      margin-top: 6px;
+      text-align: center;
+    }
+
+    /* مودال تنظیمات */
+    .modal {
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(0,0,0,0.7);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      opacity: 0;
+      visibility: hidden;
+      transition: all 0.3s;
+      z-index: 1000;
+    }
+    .modal.open {
+      opacity: 1;
+      visibility: visible;
+    }
+    .modal-content {
+      background: var(--card);
+      padding: 28px;
+      border-radius: 16px;
+      max-width: 380px;
+      width: 90%;
+      text-align: center;
+      box-shadow: 0 20px 40px rgba(0,0,0,0.4);
+      transform: scale(0.9);
+      transition: transform 0.3s;
+      max-height: 90vh;
+      overflow-y: auto;
+    }
+    .modal.open .modal-content { transform: scale(1); }
+    .card-number {
+      font-family: monospace;
+      font-size: 1.6rem;
+      letter-spacing: 4px;
+      padding: 16px;
+      background: rgba(0,0,0,0.2);
+      border-radius: 12px;
+      margin: 20px 0;
+      word-break: break-all;
+    }
+    .light .card-number { background: rgba(0,0,0,0.1); }
+    .close-modal {
+      position: absolute;
+      top: 12px;
+      left: 12px;
+      font-size: 28px;
+      cursor: pointer;
+      opacity: 0.7;
+    }
+    .close-modal:hover { opacity: 1; }
+
+    /* اطلاعات کاربر */
+    .user-info {
+      background: rgba(255,255,255,0.08);
+      padding: 16px;
+      border-radius: 12px;
+      margin: 20px 0;
+      text-align: right;
+    }
+    .user-info-item {
+      display: flex;
+      justify-content: space-between;
+      padding: 8px 0;
+      border-bottom: 1px dashed var(--border);
+      font-size: 0.95rem;
+    }
+    .user-info-item:last-child { border: none; }
+    .user-info-label { opacity: 0.8; margin-left: 8px; }
+    .user-info-value { font-weight: bold; direction: ltr; text-align: left; }
+
+    /* تم کاستوم */
+    .theme-option {
+      margin: 16px 0;
+      padding: 12px;
+      border-radius: 12px;
+      background: rgba(255,255,255,0.05);
+      cursor: pointer;
+      transition: all 0.2s;
+      text-align: right;
+    }
+    .theme-option.selected {
+      border: 2px solid var(--accent);
+      background: rgba(34,197,94,0.1);
+    }
+    .color-picker-group {
+      margin: 16px 0;
+      text-align: right;
+    }
+    .color-picker-group label {
+      display: block;
+      margin-bottom: 8px;
+      font-size: 0.9rem;
+      opacity: 0.9;
+    }
+    input[type="color"] {
+      width: 100%;
+      height: 50px;
+      border-radius: 12px;
+      border: none;
+      cursor: pointer;
+    }
+
+    /* Toast */
+    .toast-container {
+      position: fixed;
+      top: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 2000;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      align-items: center;
+    }
+    .toast {
+      min-width: 300px;
+      max-width: 90vw;
+      background: var(--card);
+      color: var(--text);
+      padding: 16px 20px;
+      border-radius: 12px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.4);
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      opacity: 0;
+      transform: translateY(-20px);
+      transition: all 0.4s ease;
+      border-left: 6px solid;
+    }
+    .toast.show { opacity: 1; transform: translateY(0); }
+    .toast.success { border-left-color: #22c55e; }
+    .toast.warning { border-left-color: #f59e0b; }
+    .toast.info { border-left-color: #3b82f6; }
+    .toast.error { border-left-color: #ef4444; }
+    .toast-icon { font-size: 1.8rem; }
+    .toast-message { flex: 1; font-weight: 500; }
+    .toast-close { cursor: pointer; opacity: 0.7; font-size: 1.4rem; }
+    .toast-close:hover { opacity: 1; }
+  </style>
+</head>
+<body>
+
+  <div class="toast-container" id="toastContainer"></div>
+
+  <!-- صفحه ورود -->
+  <div class="container" id="loginBox">
+    <h2>🌟 NeoBank</h2>
+    <p style="text-align:center; opacity:0.8; margin-bottom:16px; font-size:0.95rem;">بانک دیجیتال ساده و امن</p>
+    
+    <div class="input-group" style="margin:10px 0;">
+      <label>نام کاربری</label>
+      <input id="username" placeholder="مثلاً: ali123">
+    </div>
+    <div class="input-group" style="margin:10px 0;">
+      <label>رمز عبور</label>
+      <input id="password" type="password" placeholder="حداقل ۴ کاراکتر">
+    </div>
+    <button onclick="app.login()">ورود / ثبت‌نام خودکار</button>
+    
+    <p style="text-align:center; font-size:0.75rem; margin-top:14px; opacity:0.65; line-height:1.4;">
+      با ورود یا ثبت‌نام، تمامی قوانین و شرایط استفاده از NeoBank را می‌پذیرید.
+    </p>
+  </div>
+
+  <!-- داشبورد -->
+  <div class="container hidden" id="dashboard">
+    <div class="top">
+      <h3>سلام، <span id="welcomeUser"></span> 👋</h3>
+      <div style="display: flex; gap: 8px;">
+        <button class="secondary" onclick="app.openSettings()">⚙️ تنظیمات</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <strong>💳 موجودی حساب:</strong>
+      <div style="font-size:1.5rem; margin-top:8px;">
+        <b><span id="balance">0</span></b> تومان
+      </div>
+    </div>
+
+    <hr style="border:none; border-top:1px solid var(--border); margin:20px 0;">
+    <h4>💸 انتقال وجه</h4>
+    <div class="input-group">
+      <input id="recipientInput" placeholder="نام کاربری یا شماره کارت ۱۰ رقمی مقصد">
+      <div class="hint">نام کاربری وارد کنید یا شماره کارت ۱۰ رقمی</div>
+    </div>
+    <div class="input-group">
+      <input id="transferAmount" type="number" placeholder="مبلغ انتقال (تومان)">
+    </div>
+    <button onclick="app.transferUnified()">انتقال وجه</button>
+
+    <hr style="border:none; border-top:1px solid var(--border); margin:20px 0;">
+
+    <h4>درخواست وام</h4>
+    <div class="input-group">
+      <input id="loanAmount" type="number" placeholder="مبلغ وام (تومان)">
+    </div>
+    <div class="input-group">
+      <select id="loanMonths">
+        <option value="3">۳ ماهه (۱۰٪ سود)</option>
+        <option value="6">۶ ماهه (۱۰٪ سود)</option>
+        <option value="12">۱۲ ماهه (۱۰٪ سود)</option>
+      </select>
+    </div>
+    <button onclick="app.takeLoan()">دریافت وام</button>
+
+    <!-- بخش بدهی وام اصلاح شده -->
+    <div class="card">
+      <strong>📄 بدهی وام:</strong> 
+      <b id="loanDebtDisplay">0 تومان</b>
+      <div id="monthlyPayment" style="font-size:0.9rem; margin-top:4px; opacity:0.8;"></div>
+    </div>
+    <button class="secondary" onclick="app.payLoan()" id="payBtn">پرداخت قسط ماهانه</button>
+
+    <hr style="border:none; border-top:1px solid var(--border); margin:20px 0;">
+
+    <h4>تاریخچه تراکنش‌ها</h4>
+    <div class="card" id="transactions" style="max-height:200px; overflow-y:auto;">
+      <p style="opacity:0.6; text-align:center;">تراکنشی ثبت نشده</p>
+    </div>
+
+    <hr style="border:none; border-top:1px solid var(--border); margin:20px 0;">
+    <div class="card" style="border: 2px dashed #ef4444; position: relative; overflow: hidden;">
+      <div style="position: absolute; top: -10px; right: -10px; font-size: 60px; opacity: 0.2; pointer-events: none;">⚠️</div>
+      <div style="text-align: center; padding: 20px;">
+        <div style="font-size: 48px; margin-bottom: 16px;">🚫</div>
+        <h4 style="color: #fca5a5; margin: 0 0 8px 0;">دسترسی محدود</h4>
+        <p style="opacity: 0.8; margin: 0;">
+          پشتیبان‌گیری و بازیابی داده‌ها فقط در پنل مدیریت امکان‌پذیر است.
+        </p>
+      </div>
+    </div>
+
+    <button class="danger" onclick="app.logout()" style="margin-top:16px;">خروج از حساب</button>
+  </div>
+
+  <!-- مودال تنظیمات -->
+  <div class="modal" id="settingsModal">
+    <div class="modal-content">
+      <span class="close-modal" onclick="app.closeSettings()">&times;</span>
+      <h3>⚙️ تنظیمات و اطلاعات حساب</h3>
+
+      <div class="user-info" id="userInfo">
+        <div class="user-info-item">
+          <span class="user-info-label">👤 نام کاربری:</span>
+          <span class="user-info-value" id="infoUsername">-</span>
+        </div>
+        <div class="user-info-item">
+          <span class="user-info-label">💳 شماره کارت:</span>
+          <span class="user-info-value" id="infoCardNumber">-</span>
+        </div>
+        <div class="user-info-item">
+          <span class="user-info-label">💰 موجودی:</span>
+          <span class="user-info-value" id="infoBalance">-</span>
+        </div>
+        <div class="user-info-item">
+          <span class="user-info-label">📄 وضعیت وام:</span>
+          <span class="user-info-value" id="infoLoanStatus">بدون وام</span>
+        </div>
+        <div class="user-info-item">
+          <span class="user-info-label">📅 تاریخ ثبت‌نام:</span>
+          <span class="user-info-value" id="infoRegisterDate">-</span>
+        </div>
+        <div class="user-info-item">
+          <span class="user-info-label">📊 تعداد تراکنش:</span>
+          <span class="user-info-value" id="infoTransactionCount">0</span>
+        </div>
+      </div>
+
+      <button class="secondary" onclick="app.copyCardNumber()">📋 کپی شماره کارت</button>
+
+      <hr style="border:none; border-top:1px solid var(--border); margin:30px 0;">
+
+      <h4 style="text-align:right; margin-bottom:16px;">🎨 تم ظاهر</h4>
+      
+      <div class="theme-option selected" id="theme-dark" onclick="app.setTheme('dark')">
+        🌙 تم تیره (پیش‌فرض)
+      </div>
+      <div class="theme-option" id="theme-light" onclick="app.setTheme('light')">
+        ☀️ تم روشن
+      </div>
+      <div class="theme-option" id="theme-custom" onclick="app.setTheme('custom')">
+        🎨 تم کاستوم
+      </div>
+
+      <div id="customColors" class="hidden">
+        <div class="color-picker-group">
+          <label>رنگ پس‌زمینه</label>
+          <input type="color" id="custom-bg" value="#0f172a">
+        </div>
+        <div class="color-picker-group">
+          <label>رنگ کارت‌ها</label>
+          <input type="color" id="custom-card" value="#1e293b">
+        </div>
+        <div class="color-picker-group">
+          <label>رنگ متن</label>
+          <input type="color" id="custom-text" value="#f1f5f9">
+        </div>
+        <div class="color-picker-group">
+          <label>رنگ دکمه‌ها (اکسنت)</label>
+          <input type="color" id="custom-accent" value="#22c55e">
+        </div>
+      </div>
+
+      <p style="font-size:0.8rem; opacity:0.7; margin-top:20px;">
+        تمام تغییرات بلافاصله اعمال و ذخیره می‌شوند.
+      </p>
+    </div>
+  </div>
+
+  <script>
+    class NeoBank {
+      constructor() {
+        this.currentUser = null;
+        this.users = {};
+        this.initTheme();
+      }
+
+      showToast(message, type = 'info', duration = 5000) {
+        const container = document.getElementById('toastContainer');
+        const toast = document.createElement('div');
+        toast.className = `toast ${type} show`;
+
+        let icon = '📢';
+        if (type === 'success') icon = '💰';
+        if (type === 'warning') icon = '💸';
+        if (type === 'error') icon = '❌';
+        if (type === 'info') icon = 'ℹ️';
+
+        toast.innerHTML = `
+          <div class="toast-icon">${icon}</div>
+          <div class="toast-message">${message}</div>
+          <div class="toast-close" onclick="this.parentElement.remove()">×</div>
+        `;
+
+        container.appendChild(toast);
+
+        setTimeout(() => {
+          toast.classList.remove('show');
+          setTimeout(() => toast.remove(), 400);
+        }, duration);
+      }
+
+      async hashPassword(password) {
+        const encoder = new TextEncoder();
+        const data = encoder.encode(password);
+        const hash = await crypto.subtle.digest('SHA-256', data);
+        return Array.from(new Uint8Array(hash)).map(b => b.toString(16).padStart(2, '0')).join('');
+      }
+
+      loadUsers() {
+        this.users = JSON.parse(localStorage.getItem('neobank_users') || '{}');
+      }
+
+      saveUsers() {
+        localStorage.setItem('neobank_users', JSON.stringify(this.users));
+      }
+
+      generateCardNumber(username) {
+        let hash = 0;
+        for (let i = 0; i < username.length; i++) {
+          hash = ((hash << 5) - hash + username.charCodeAt(i)) | 0;
+        }
+        let card = Math.abs(hash).toString().padStart(10, '7');
+        return card.slice(0, 10);
+      }
+
+      generateTrackingCode() {
+        return Math.floor(10000000 + Math.random() * 90000000).toString();
+      }
+
+      addTransaction(username, type, amount, details = '') {
+        if (!this.users[username]) this.users[username] = { transactions: [] };
+        if (!this.users[username].transactions) this.users[username].transactions = [];
+        
+        this.users[username].transactions.unshift({
+          date: new Date().toLocaleString('fa-IR'),
+          type,
+          amount,
+          details
+        });
+      }
+
+      renderTransactions() {
+        const transactions = this.users[this.currentUser]?.transactions || [];
+        const list = document.getElementById('transactions');
+        
+        if (transactions.length === 0) {
+          list.innerHTML = '<p style="opacity:0.6; text-align:center;">تراکنشی ثبت نشده</p>';
+          return;
+        }
+
+        list.innerHTML = transactions.map(t => `
+          <div class="transaction">
+            <strong>${t.type}</strong> ${Math.abs(t.amount).toLocaleString()} تومان
+            ${t.amount < 0 ? '<span style="color:#fca5a5">(کسر شد)</span>' : '<span style="color:#86efac">(واریز شد)</span>'}
+            <div style="font-size:0.8rem; opacity:0.7;">${t.details} — ${t.date}</div>
+          </div>
+        `).join('');
+      }
+
+      async login() {
+        const username = document.getElementById('username').value.trim();
+        const password = document.getElementById('password').value;
+
+        if (!username || password.length < 4) {
+          this.showToast('نام کاربری و رمز عبور الزامی است', 'error');
+          return;
+        }
+
+        this.loadUsers();
+        const hashed = await this.hashPassword(password);
+        const now = new Date().toLocaleDateString('fa-IR');
+
+        if (!this.users[username]) {
+          this.users[username] = {
+            password: hashed,
+            balance: 1000000,
+            loan: null,
+            transactions: [],
+            cardNumber: this.generateCardNumber(username),
+            registerDate: now
+          };
+          this.addTransaction(username, 'هدیه ثبت‌نام', 1000000);
+          this.showToast('حساب جدید ساخته شد! 💸 ۱٬۰۰۰٬۰۰۰ تومان هدیه', 'success');
+        } else if (this.users[username].password !== hashed) {
+          this.showToast('رمز عبور اشتباه است', 'error');
+          return;
+        } else {
+          this.showToast(`خوش آمدید، ${username} 👋`, 'info');
+        }
+
+        this.currentUser = username;
+        this.saveUsers();
+        this.showDashboard();
+      }
+
+      showDashboard() {
+        this.loadUsers();
+        const user = this.users[this.currentUser];
+
+        document.getElementById('loginBox').classList.add('hidden');
+        document.getElementById('dashboard').classList.remove('hidden');
+        document.getElementById('welcomeUser').innerText = this.currentUser;
+        document.getElementById('balance').innerText = user.balance.toLocaleString();
+
+        const cardNum = user.cardNumber || this.generateCardNumber(this.currentUser);
+        if (!user.cardNumber) {
+          user.cardNumber = cardNum;
+          this.saveUsers();
+        }
+        document.getElementById('modalCardNumber').innerText = cardNum;
+
+        // اصلاح شده: وقتی بدهی 0 است، "بدون بدهی" نمایش داده شود
+        const currentDebt = user.loan ? user.loan.debt : 0;
+        if (currentDebt === 0) {
+          document.getElementById('loanDebtDisplay').innerText = 'بدون بدهی';
+        } else {
+          document.getElementById('loanDebtDisplay').innerText = currentDebt.toLocaleString() + ' تومان';
+        }
+
+        if (user.loan && user.loan.debt > 0) {
+          document.getElementById('monthlyPayment').innerHTML = 
+            `قسط ماهانه: <b>${user.loan.monthly.toLocaleString()} تومان</b>`;
+          document.getElementById('payBtn').style.display = 'block';
+        } else {
+          document.getElementById('monthlyPayment').innerText = '';
+          document.getElementById('payBtn').style.display = 'none';
+        }
+
+        this.renderTransactions();
+      }
+
+      openSettings() {
+        this.loadUsers();
+        const user = this.users[this.currentUser];
+
+        document.getElementById('infoUsername').innerText = this.currentUser;
+        document.getElementById('infoCardNumber').innerText = user.cardNumber;
+        document.getElementById('infoBalance').innerText = user.balance.toLocaleString() + ' تومان';
+        document.getElementById('infoTransactionCount').innerText = (user.transactions || []).length;
+
+        if (user.loan && user.loan.debt > 0) {
+          document.getElementById('infoLoanStatus').innerHTML = 
+            `بدهی: ${user.loan.debt.toLocaleString()} تومان<br>قسط ماهانه: ${user.loan.monthly.toLocaleString()} تومان`;
+        } else {
+          document.getElementById('infoLoanStatus').innerText = 'بدون وام';
+        }
+
+        document.getElementById('infoRegisterDate').innerText = user.registerDate || 'نامشخص';
+
+        document.getElementById('settingsModal').classList.add('open');
+        this.updateThemeSelector();
+      }
+
+      closeSettings() {
+        document.getElementById('settingsModal').classList.remove('open');
+      }
+
+      copyCardNumber() {
+        const cardNum = document.getElementById('modalCardNumber').innerText;
+        navigator.clipboard.writeText(cardNum).then(() => {
+          this.showToast('شماره کارت کپی شد ✅', 'success');
+        }).catch(() => {
+          prompt('کپی نشد! دستی کپی کنید:', cardNum);
+        });
+      }
+
+      transferUnified() {
+        const recipient = document.getElementById('recipientInput').value.trim();
+        const amount = parseInt(document.getElementById('transferAmount').value);
+
+        if (!recipient) return this.showToast('مقصد را وارد کنید', 'error');
+        if (!amount || amount < 1000) return this.showToast('مبلغ حداقل ۱۰۰۰ تومان', 'error');
+
+        this.loadUsers();
+
+        let targetUser = null;
+        let method = '';
+
+        if (/^\d{10}$/.test(recipient)) {
+          for (const username in this.users) {
+            if (this.users[username].cardNumber === recipient) {
+              targetUser = username;
+              method = 'کارت ' + recipient;
+              break;
+            }
+          }
+        } else {
+          if (this.users[recipient]) {
+            targetUser = recipient;
+            method = recipient;
+          }
+        }
+
+        if (!targetUser) return this.showToast('کاربر یا کارت یافت نشد', 'error');
+        if (targetUser === this.currentUser) return this.showToast('نمی‌توانید به خودتان انتقال دهید!', 'warning');
+        if (this.users[this.currentUser].balance < amount) return this.showToast('موجودی کافی نیست', 'error');
+
+        const trackingCode = this.generateTrackingCode();
+
+        this.users[this.currentUser].balance -= amount;
+        this.users[targetUser].balance += amount;
+
+        this.addTransaction(this.currentUser, 'انتقال به ' + method, -amount, `کد رهگیری: ${trackingCode}`);
+        this.addTransaction(targetUser, 'دریافت از ' + this.currentUser, amount, `کد رهگیری: ${trackingCode}`);
+
+        this.saveUsers();
+        this.renderTransactions();
+        this.showDashboard();
+        document.getElementById('recipientInput').value = '';
+        document.getElementById('transferAmount').value = '';
+
+        this.showToast(`
+          انتقال ${amount.toLocaleString()} تومان به ${method} موفق بود 💸<br>
+          <strong>کد رهگیری: ${trackingCode}</strong>
+        `, 'success', 8000);
+      }
+
+      takeLoan() {
+        const amount = parseInt(document.getElementById('loanAmount').value);
+        const months = parseInt(document.getElementById('loanMonths').value);
+
+        if (!amount || amount < 100000) return this.showToast('حداقل وام ۱۰۰٬۰۰۰ تومان', 'error');
+
+        this.loadUsers();
+        if (this.users[this.currentUser].loan) return this.showToast('وام فعال دارید', 'warning');
+
+        const interest = Math.floor(amount * 0.10);
+        const totalDebt = amount + interest;
+        const monthly = Math.ceil(totalDebt / months);
+
+        this.users[this.currentUser].balance += amount;
+        this.users[this.currentUser].loan = { debt: totalDebt, monthly };
+
+        this.addTransaction(this.currentUser, 'دریافت وام', amount, `سود: ${interest.toLocaleString()} تومان`);
+        this.saveUsers();
+        this.renderTransactions();
+        this.showDashboard();
+        this.showToast(`وام ${amount.toLocaleString()} تومانی واریز شد 🎉`, 'success');
+      }
+
+      payLoan() {
+        this.loadUsers();
+        const loan = this.users[this.currentUser].loan;
+        if (!loan) {
+          this.showToast('وامی برای پرداخت ندارید', 'warning');
+          return;
+        }
+
+        if (this.users[this.currentUser].balance < loan.monthly) {
+          return this.showToast('موجودی کافی نیست', 'error');
+        }
+
+        this.users[this.currentUser].balance -= loan.monthly;
+        loan.debt -= loan.monthly;
+
+        this.addTransaction(this.currentUser, 'پرداخت قسط وام', -loan.monthly);
+
+        if (loan.debt <= 0) {
+          this.users[this.currentUser].loan = null;
+          this.showToast('تبریک! وام کاملاً تسویه شد 🎉', 'success');
+        } else {
+          this.showToast(`قسط ${loan.monthly.toLocaleString()} تومانی پرداخت شد ✅`, 'warning');
+        }
+
+        this.saveUsers();
+        this.renderTransactions();
+        this.showDashboard();
+      }
+
+      logout() {
+        if (confirm('آیا مطمئنید که می‌خواهید خارج شوید؟')) {
+          this.showToast('با موفقیت خارج شدید 👋', 'info');
+          this.currentUser = null;
+          document.getElementById('dashboard').classList.add('hidden');
+          document.getElementById('loginBox').classList.remove('hidden');
+          document.getElementById('username').value = '';
+          document.getElementById('password').value = '';
+        }
+      }
+
+      setTheme(theme) {
+        document.body.classList.remove('light');
+        document.querySelectorAll('.theme-option').forEach(el => el.classList.remove('selected'));
+
+        if (theme === 'dark') {
+          document.getElementById('theme-dark').classList.add('selected');
+          document.documentElement.style.removeProperty('--bg');
+          document.documentElement.style.removeProperty('--card');
+          document.documentElement.style.removeProperty('--text');
+          document.documentElement.style.removeProperty('--accent');
+          document.getElementById('customColors').classList.add('hidden');
+          localStorage.setItem('neobank_theme_mode', 'dark');
+          this.showToast('تم تیره فعال شد 🌙', 'info');
+        } else if (theme === 'light') {
+          document.body.classList.add('light');
+          document.getElementById('theme-light').classList.add('selected');
+          document.getElementById('customColors').classList.add('hidden');
+          localStorage.setItem('neobank_theme_mode', 'light');
+          this.showToast('تم روشن فعال شد ☀️', 'info');
+        } else if (theme === 'custom') {
+          document.getElementById('theme-custom').classList.add('selected');
+          document.getElementById('customColors').classList.remove('hidden');
+          this.applyCustomTheme();
+          localStorage.setItem('neobank_theme_mode', 'custom');
+          this.showToast('تم کاستوم فعال شد 🎨', 'info');
+        }
+      }
+
+      applyCustomTheme() {
+        const bg = document.getElementById('custom-bg').value;
+        const card = document.getElementById('custom-card').value;
+        const text = document.getElementById('custom-text').value;
+        const accent = document.getElementById('custom-accent').value;
+
+        document.documentElement.style.setProperty('--bg', bg);
+        document.documentElement.style.setProperty('--card', card);
+        document.documentElement.style.setProperty('--text', text);
+        document.documentElement.style.setProperty('--accent', accent);
+        document.documentElement.style.setProperty('--accent-hover', this.darkenColor(accent, 20));
+
+        localStorage.setItem('neobank_custom_bg', bg);
+        localStorage.setItem('neobank_custom_card', card);
+        localStorage.setItem('neobank_custom_text', text);
+        localStorage.setItem('neobank_custom_accent', accent);
+      }
+
+      darkenColor(color, percent) {
+        const num = parseInt(color.replace("#",""),16),
+              amt = Math.round(2.55 * percent),
+              R = (num >> 16) - amt,
+              G = (num >> 8 & 0x00FF) - amt,
+              B = (num & 0x0000FF) - amt;
+        return "#" + (0x1000000 + (R<255?R<1?0:R:255)*0x10000 + (G<255?G<1?0:G:255)*0x100 + (B<255?B<1?0:B:255)).toString(16).slice(1);
+      }
+
+      updateThemeSelector() {
+        const mode = localStorage.getItem('neobank_theme_mode') || 'dark';
+        this.setTheme(mode);
+
+        if (mode === 'custom') {
+          document.getElementById('custom-bg').value = localStorage.getItem('neobank_custom_bg') || '#0f172a';
+          document.getElementById('custom-card').value = localStorage.getItem('neobank_custom_card') || '#1e293b';
+          document.getElementById('custom-text').value = localStorage.getItem('neobank_custom_text') || '#f1f5f9';
+          document.getElementById('custom-accent').value = localStorage.getItem('neobank_custom_accent') || '#22c55e';
+          this.applyCustomTheme();
+        }
+      }
+
+      initTheme() {
+        const mode = localStorage.getItem('neobank_theme_mode') || 
+                     (window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark');
+        this.setTheme(mode);
+
+        if (mode === 'custom') {
+          this.applyCustomTheme();
+        }
+      }
+    }
+
+    const app = new NeoBank();
+
+    document.getElementById('custom-bg').addEventListener('input', () => app.applyCustomTheme());
+    document.getElementById('custom-card').addEventListener('input', () => app.applyCustomTheme());
+    document.getElementById('custom-text').addEventListener('input', () => app.applyCustomTheme());
+    document.getElementById('custom-accent').addEventListener('input', () => app.applyCustomTheme());
+  </script>
+</body>
+</html>

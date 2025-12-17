@@ -1,0 +1,439 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>پنل مدیریت | NeoBank</title>
+  <style>
+    :root {
+      --bg: #0f172a;
+      --card: #1e293b;
+      --text: #f1f5f9;
+      --accent: #22c55e;
+      --accent-hover: #16a34a;
+      --danger: #ef4444;
+      --warning: #f59e0b;
+      --border: #334155;
+    }
+    .light {
+      --bg: #f8fafc;
+      --card: #ffffff;
+      --text: #0f172a;
+      --accent: #2563eb;
+      --accent-hover: #1d4ed8;
+      --danger: #dc2626;
+      --warning: #d97706;
+      --border: #e2e8f0;
+    }
+    body {
+      margin: 0;
+      font-family: 'Tahoma', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      transition: all 0.4s;
+      min-height: 100vh;
+    }
+    .container {
+      max-width: 900px;
+      margin: 40px auto;
+      padding: 32px;
+    }
+    h1 { text-align: center; margin-bottom: 30px; }
+    .login-box {
+      max-width: 400px;
+      margin: 100px auto;
+      background: var(--card);
+      padding: 40px;
+      border-radius: 16px;
+      box-shadow: 0 20px 40px rgba(0,0,0,0.3);
+      text-align: center;
+    }
+    input, button {
+      width: 100%;
+      padding: 14px;
+      margin: 10px 0;
+      border-radius: 12px;
+      border: none;
+      font-size: 1rem;
+    }
+    input {
+      background: #334155;
+      color: var(--text);
+      border: 1px solid var(--border);
+    }
+    .light input { background: #f1f5f9; color: #000; }
+    button {
+      background: var(--accent);
+      color: white;
+      font-weight: bold;
+      cursor: pointer;
+    }
+    button:hover { background: var(--accent-hover); }
+    button.danger { background: var(--danger); }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 20px 0;
+      background: var(--card);
+      border-radius: 12px;
+      overflow: hidden;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+    }
+    th, td {
+      padding: 14px;
+      text-align: center;
+      border-bottom: 1px solid var(--border);
+    }
+    th {
+      background: rgba(255,255,255,0.1);
+      font-weight: bold;
+    }
+    .light th { background: rgba(0,0,0,0.08); }
+    tr:hover { background: rgba(255,255,255,0.05); }
+    .actions button {
+      padding: 6px 12px;
+      margin: 0 4px;
+      font-size: 0.9rem;
+    }
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 16px;
+      margin: 30px 0;
+    }
+    .stat-card {
+      background: var(--card);
+      padding: 20px;
+      border-radius: 12px;
+      text-align: center;
+      border: 1px solid var(--border);
+    }
+    .hidden { display: none; }
+    .top-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 30px;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+
+    /* بخش جستجوی کد رهگیری */
+    .search-section {
+      background: var(--card);
+      padding: 20px;
+      border-radius: 12px;
+      margin-bottom: 30px;
+      border: 1px solid var(--border);
+    }
+    .search-input {
+      display: flex;
+      gap: 10px;
+    }
+    .search-input input {
+      flex: 1;
+    }
+    .receipt-card {
+      background: var(--card);
+      padding: 20px;
+      border-radius: 12px;
+      margin: 20px 0;
+      border: 2px solid var(--accent);
+      text-align: right;
+    }
+    .receipt-title {
+      text-align: center;
+      font-size: 1.4rem;
+      margin-bottom: 20px;
+      color: var(--accent);
+    }
+    .receipt-item {
+      display: flex;
+      justify-content: space-between;
+      padding: 10px 0;
+      border-bottom: 1px dashed var(--border);
+    }
+    .receipt-item:last-child { border: none; }
+    .no-result {
+      text-align: center;
+      padding: 40px;
+      opacity: 0.7;
+      font-size: 1.1rem;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- صفحه ورود ادمین -->
+  <div id="adminLogin" class="login-box">
+    <h1>🔐 پنل مدیریت NeoBank</h1>
+    <p>فقط برای ادمین</p>
+    <input id="adminUser" placeholder="نام کاربری ادمین" value="admin">
+    <input id="adminPass" type="password" placeholder="رمز عبور" value="admin123">
+    <button onclick="adminLogin()">ورود به پنل</button>
+    <p style="margin-top:20px; font-size:0.8rem; opacity:0.7;">
+      رمز پیش‌فرض: admin / admin123
+    </p>
+  </div>
+
+  <!-- پنل اصلی ادمین -->
+  <div class="container hidden" id="adminPanel">
+    <div class="top-bar">
+      <h1>پنل مدیریت NeoBank</h1>
+      <div>
+        <button onclick="toggleTheme()">🌙 تم</button>
+        <button class="danger" onclick="adminLogout()">خروج</button>
+      </div>
+    </div>
+
+    <!-- جستجوی کد رهگیری -->
+    <div class="search-section">
+      <h3 style="text-align:center; margin-bottom:16px;">🔍 جستجوی کد رهگیری</h3>
+      <div class="search-input">
+        <input type="text" id="trackingInput" placeholder="کد رهگیری ۸ رقمی را وارد کنید" maxlength="8">
+        <button onclick="searchTracking()">جستجو</button>
+      </div>
+    </div>
+
+    <!-- نتیجه جستجو -->
+    <div id="receiptResult"></div>
+
+    <div class="stats">
+      <div class="stat-card">
+        <h3>تعداد کاربران</h3>
+        <h2 id="totalUsers">0</h2>
+      </div>
+      <div class="stat-card">
+        <h3>جمع موجودی کل</h3>
+        <h2 id="totalBalance">0</h2> تومان
+      </div>
+      <div class="stat-card">
+        <h3>جمع بدهی وام</h3>
+        <h2 id="totalDebt">0</h2> تومان
+      </div>
+      <div class="stat-card">
+        <h3>تعداد وام فعال</h3>
+        <h2 id="activeLoans">0</h2>
+      </div>
+    </div>
+
+    <h2 style="text-align:center;">لیست تمام کاربران</h2>
+    <table id="usersTable">
+      <thead>
+        <tr>
+          <th>نام کاربری</th>
+          <th>موجودی</th>
+          <th>بدهی وام</th>
+          <th>قسط ماهانه</th>
+          <th>تعداد تراکنش</th>
+          <th>عملیات</th>
+        </tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+  </div>
+
+  <script>
+    const ADMIN_USERNAME = "admin";
+    const ADMIN_PASSWORD = "admin123";
+
+    function getUsers() {
+      return JSON.parse(localStorage.getItem('neobank_users') || '{}');
+    }
+
+    function saveUsers(users) {
+      localStorage.setItem('neobank_users', JSON.stringify(users));
+    }
+
+    function adminLogin() {
+      const user = document.getElementById('adminUser').value.trim();
+      const pass = document.getElementById('adminPass').value;
+
+      if (user === ADMIN_USERNAME && pass === ADMIN_PASSWORD) {
+        document.getElementById('adminLogin').classList.add('hidden');
+        document.getElementById('adminPanel').classList.remove('hidden');
+        loadAdminPanel();
+      } else {
+        alert('نام کاربری یا رمز عبور ادمین اشتباه است!');
+      }
+    }
+
+    function loadAdminPanel() {
+      const users = getUsers();
+      const tableBody = document.querySelector('#usersTable tbody');
+      tableBody.innerHTML = '';
+
+      let totalUsers = 0;
+      let totalBalance = 0;
+      let totalDebt = 0;
+      let activeLoans = 0;
+
+      for (const username in users) {
+        if (username === 'admin') continue;
+
+        const user = users[username];
+        totalUsers++;
+        totalBalance += user.balance || 0;
+        const loanDebt = user.loan ? user.loan.debt : 0;
+        const monthly = user.loan ? user.loan.monthly : 0;
+        if (user.loan && loanDebt > 0) {
+          totalDebt += loanDebt;
+          activeLoans++;
+        }
+
+        const row = document.createElement('tr');
+        row.innerHTML = `
+          <td><strong>${username}</strong></td>
+          <td>${(user.balance || 0).toLocaleString()} تومان</td>
+          <td>${loanDebt.toLocaleString()} تومان</td>
+          <td>${monthly.toLocaleString()} تومان</td>
+          <td>${(user.transactions || []).length}</td>
+          <td class="actions">
+            <button onclick="editBalance('${username}')">ویرایش موجودی</button>
+            <button onclick="clearLoan('${username}')">تسویه وام</button>
+            <button class="danger" onclick="deleteUser('${username}')">حذف کاربر</button>
+          </td>
+        `;
+        tableBody.appendChild(row);
+      }
+
+      document.getElementById('totalUsers').innerText = totalUsers;
+      document.getElementById('totalBalance').innerText = totalBalance.toLocaleString();
+      document.getElementById('totalDebt').innerText = totalDebt.toLocaleString();
+      document.getElementById('activeLoans').innerText = activeLoans;
+    }
+
+    function searchTracking() {
+      const code = document.getElementById('trackingInput').value.trim();
+      if (code.length !== 8 || !/^\d+$/.test(code)) {
+        document.getElementById('receiptResult').innerHTML = 
+          '<div class="no-result">⚠️ کد رهگیری باید دقیقاً ۸ رقم باشد</div>';
+        return;
+      }
+
+      const users = getUsers();
+      let results = [];
+
+      for (const username in users) {
+        const transactions = users[username].transactions || [];
+        transactions.forEach(t => {
+          if (t.details && t.details.includes(`کد رهگیری: ${code}`)) {
+            results.push({
+              username,
+              transaction: t
+            });
+          }
+        });
+      }
+
+      const resultDiv = document.getElementById('receiptResult');
+      if (results.length === 0) {
+        resultDiv.innerHTML = '<div class="no-result">❌ کد رهگیری یافت نشد</div>';
+        return;
+      }
+
+      // معمولاً دو تراکنش (فرستنده و گیرنده) داریم
+      let sender = results.find(r => r.transaction.amount < 0);
+      let receiver = results.find(r => r.transaction.amount > 0);
+
+      if (!sender || !receiver) {
+        resultDiv.innerHTML = '<div class="no-result">⚠️ اطلاعات ناقص است</div>';
+        return;
+      }
+
+      const amount = Math.abs(sender.transaction.amount);
+
+      resultDiv.innerHTML = `
+        <div class="receipt-card">
+          <div class="receipt-title">🧾 رسید تراکنش</div>
+          <div class="receipt-item">
+            <span>کد رهگیری:</span>
+            <strong>${code}</strong>
+          </div>
+          <div class="receipt-item">
+            <span>مبلغ انتقال:</span>
+            <strong>${amount.toLocaleString()} تومان</strong>
+          </div>
+          <div class="receipt-item">
+            <span>از حساب:</span>
+            <strong>${sender.username}</strong>
+          </div>
+          <div class="receipt-item">
+            <span>به حساب:</span>
+            <strong>${receiver.username}</strong>
+          </div>
+          <div class="receipt-item">
+            <span>تاریخ و زمان:</span>
+            <strong>${sender.transaction.date}</strong>
+          </div>
+          <div style="text-align:center; margin-top:20px; opacity:0.8;">
+            تراکنش با موفقیت انجام شده است ✅
+          </div>
+        </div>
+      `;
+    }
+
+    // Enter key support
+    document.getElementById('trackingInput').addEventListener('keypress', e => {
+      if (e.key === 'Enter') searchTracking();
+    });
+
+    function editBalance(username) {
+      const amount = prompt(`موجودی جدید برای ${username} را وارد کنید (عدد):`);
+      if (amount === null) return;
+      const num = parseInt(amount);
+      if (isNaN(num) || num < 0) return alert('مبلغ نامعتبر');
+
+      const users = getUsers();
+      users[username].balance = num;
+      saveUsers(users);
+      alert(`موجودی ${username} به ${num.toLocaleString()} تغییر کرد`);
+      loadAdminPanel();
+    }
+
+    function clearLoan(username) {
+      if (!confirm(`وام ${username} را کاملاً تسویه کنیم؟`)) return;
+
+      const users = getUsers();
+      if (users[username].loan) {
+        users[username].loan = null;
+        saveUsers(users);
+        alert(`وام ${username} تسویه شد`);
+      } else {
+        alert('این کاربر وام فعال ندارد');
+      }
+      loadAdminPanel();
+    }
+
+    function deleteUser(username) {
+      if (!confirm(`کاربر ${username} و تمام اطلاعاتش حذف شود؟ این عمل برگشت‌ناپذیر است!`)) return;
+
+      const users = getUsers();
+      delete users[username];
+      saveUsers(users);
+      alert(`کاربر ${username} حذف شد`);
+      loadAdminPanel();
+    }
+
+    function adminLogout() {
+      if (confirm('از پنل مدیریت خارج می‌شوید؟')) {
+        document.getElementById('adminPanel').classList.add('hidden');
+        document.getElementById('adminLogin').classList.remove('hidden');
+        document.getElementById('trackingInput').value = '';
+        document.getElementById('receiptResult').innerHTML = '';
+      }
+    }
+
+    function toggleTheme() {
+      document.body.classList.toggle('light');
+      localStorage.setItem('neobank_admin_theme', document.body.classList.contains('light') ? 'light' : 'dark');
+    }
+
+    // بارگذاری تم
+    if (localStorage.getItem('neobank_admin_theme') === 'light' || 
+        (!localStorage.getItem('neobank_admin_theme') && window.matchMedia('(prefers-color-scheme: light)').matches)) {
+      document.body.classList.add('light');
+    }
+  </script>
+</body>
+</html>
